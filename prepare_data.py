@@ -1,6 +1,6 @@
 """
 prepare_data.py
-Превращает вложенный JSON (gpus.json) в плоскую таблицу CSV для обучения.
+
 """
 
 import json
