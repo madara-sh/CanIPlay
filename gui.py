@@ -7,9 +7,9 @@ import pandas as pd
 
 from gpu_specs import GPU_SPECS
 from rtx50_patch import RTX_50_SERIES
-GPU_SPECS.update(RTX_50_SERIES)  # добавляем новые карты, которых нет в датасете
+GPU_SPECS.update(RTX_50_SERIES)  
 
-# ---------- LibreHardwareMonitor (температура CPU) ----------
+
 dll_path = r"C:\Users\mlbeast\Downloads\LibreHardwareMonitor\LibreHardwareMonitorLib.dll"
 clr.AddReference(dll_path)
 from LibreHardwareMonitor.Hardware import Computer
@@ -26,7 +26,7 @@ def get_cpu_temp():
                 return sensor.Value
     return None
 
-# ---------- Загрузка ML-модели предсказания FPS ----------
+
 fps_bundle = joblib.load("fps_model.pkl")
 fps_model = fps_bundle["model"]
 fps_name_to_code = fps_bundle["name_to_code"]
@@ -39,7 +39,7 @@ RESOLUTIONS = {
     "3840x2160 (4K)": 3840 * 2160,
 }
 
-# ---------- Окно ----------
+
 window = tk.Tk()
 window.title("CanIPlay")
 window.geometry("820x900")
@@ -52,7 +52,7 @@ ram_gb = psutil.virtual_memory().total / (1024**3)
 gpus = GPUtil.getGPUs()
 detected_gpu_name = gpus[0].name if gpus else "Unknown"
 
-# ---------- Блок железа ----------
+
 hw_frame = tk.LabelFrame(window, text="Твоё железо", font=("Arial", 12))
 hw_frame.pack(padx=20, pady=8, fill="x")
 
@@ -63,12 +63,12 @@ ram_label.pack(anchor="w", padx=10, pady=3)
 gpu_label = tk.Label(hw_frame, text=f"GPU: {detected_gpu_name}, VRAM: {gpus[0].memoryTotal} MB", font=("Arial", 11))
 gpu_label.pack(anchor="w", padx=10, pady=3)
 
-# ---------- Определяем карту для модели (гибрид) ----------
+
 def find_gpu_in_specs(name):
-    """Ищем карту в справочнике: точное совпадение, потом частичное."""
+    
     if name in GPU_SPECS:
         return name
-    # частичный поиск: убираем слова и сравниваем
+    
     name_low = name.lower()
     for spec_name in GPU_SPECS:
         if spec_name.lower() in name_low or name_low in spec_name.lower():
@@ -77,11 +77,11 @@ def find_gpu_in_specs(name):
 
 matched_gpu = find_gpu_in_specs(detected_gpu_name)
 
-# ---------- Блок предсказания FPS ----------
+
 fps_frame = tk.LabelFrame(window, text="Предсказание FPS", font=("Arial", 12))
 fps_frame.pack(padx=20, pady=8, fill="x")
 
-# выбор карты (по умолчанию определённая; если не нашли — выбор вручную)
+
 tk.Label(fps_frame, text="Видеокарта:", font=("Arial", 10)).pack(anchor="w", padx=10)
 gpu_choice_var = tk.StringVar()
 gpu_names_sorted = sorted(GPU_SPECS.keys())
@@ -96,19 +96,19 @@ gpu_note_label.pack(anchor="w", padx=10)
 gpu_choice_menu = tk.OptionMenu(fps_frame, gpu_choice_var, *gpu_names_sorted)
 gpu_choice_menu.pack(anchor="w", padx=10, pady=3, fill="x")
 
-# выбор игры (из 104 игр модели)
+
 tk.Label(fps_frame, text="Игра:", font=("Arial", 10)).pack(anchor="w", padx=10)
 fps_game_var = tk.StringVar(value=fps_games[0])
 fps_game_menu = tk.OptionMenu(fps_frame, fps_game_var, *fps_games)
 fps_game_menu.pack(anchor="w", padx=10, pady=3, fill="x")
 
-# настройки графики
+
 tk.Label(fps_frame, text="Настройки графики:", font=("Arial", 10)).pack(anchor="w", padx=10)
 settings_var = tk.StringVar(value="high")
 settings_menu = tk.OptionMenu(fps_frame, settings_var, "low", "medium", "high", "ultra")
 settings_menu.pack(anchor="w", padx=10, pady=3, fill="x")
 
-# разрешение
+
 tk.Label(fps_frame, text="Разрешение:", font=("Arial", 10)).pack(anchor="w", padx=10)
 res_var = tk.StringVar(value="1920x1080 (1080p)")
 res_menu = tk.OptionMenu(fps_frame, res_var, *RESOLUTIONS.keys())
@@ -136,7 +136,7 @@ def predict_fps():
     }])[fps_bundle["features"]]
     fps = fps_model.predict(row)[0]
 
-    # цвет по играбельности
+    
     if fps >= 60:
         color = "green"
     elif fps >= 30:
@@ -149,7 +149,7 @@ predict_btn = tk.Button(fps_frame, text="Предсказать FPS", font=("Ari
                         bg="#2563eb", fg="white", command=predict_fps)
 predict_btn.pack(pady=8)
 
-# ---------- Старая проверка по требованиям (оставляем) ----------
+
 game_frame = tk.LabelFrame(window, text="Проверка совместимости", font=("Arial", 12))
 game_frame.pack(padx=20, pady=8, fill="x")
 
@@ -173,7 +173,7 @@ check_btn = tk.Button(game_frame, text="Проверить!", font=("Arial", 11,
                       bg="green", fg="white", command=check_game)
 check_btn.pack(pady=8)
 
-# ---------- Температуры ----------
+
 temp_frame = tk.LabelFrame(window, text="Температуры (реальное время)", font=("Arial", 12))
 temp_frame.pack(padx=20, pady=8, fill="x")
 
