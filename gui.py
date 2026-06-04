@@ -39,25 +39,25 @@ RESOLUTIONS = {
 
 window = tk.Tk()
 window.title("CanIPlay")
-window.geometry("820x900")
+window.geometry("560x640")
 
-title = tk.Label(window, text="CanIPlay", font=("Arial", 24, "bold"))
-title.pack(pady=15)
+title = tk.Label(window, text="CanIPlay", font=("Arial", 20, "bold"))
+title.pack(pady=8)
 
 cpu_count = psutil.cpu_count()
 ram_gb = psutil.virtual_memory().total / (1024**3)
 gpus = GPUtil.getGPUs()
 detected_gpu_name = gpus[0].name if gpus else "Unknown"
 
-hw_frame = tk.LabelFrame(window, text="Your Hardware", font=("Arial", 12))
-hw_frame.pack(padx=20, pady=8, fill="x")
+hw_frame = tk.LabelFrame(window, text="Your Hardware", font=("Arial", 11))
+hw_frame.pack(padx=12, pady=5, fill="x")
 
-cpu_label = tk.Label(hw_frame, text=f"CPU: {cpu_count} cores", font=("Arial", 11))
-cpu_label.pack(anchor="w", padx=10, pady=3)
-ram_label = tk.Label(hw_frame, text=f"RAM: {ram_gb:.1f} GB", font=("Arial", 11))
-ram_label.pack(anchor="w", padx=10, pady=3)
-gpu_label = tk.Label(hw_frame, text=f"GPU: {detected_gpu_name}, VRAM: {gpus[0].memoryTotal} MB", font=("Arial", 11))
-gpu_label.pack(anchor="w", padx=10, pady=3)
+cpu_label = tk.Label(hw_frame, text=f"CPU: {cpu_count} cores", font=("Arial", 10))
+cpu_label.pack(anchor="w", padx=8, pady=1)
+ram_label = tk.Label(hw_frame, text=f"RAM: {ram_gb:.1f} GB", font=("Arial", 10))
+ram_label.pack(anchor="w", padx=8, pady=1)
+gpu_label = tk.Label(hw_frame, text=f"GPU: {detected_gpu_name}, VRAM: {gpus[0].memoryTotal} MB", font=("Arial", 10))
+gpu_label.pack(anchor="w", padx=8, pady=1)
 
 def find_gpu_in_specs(name):
     if name in GPU_SPECS:
@@ -70,10 +70,10 @@ def find_gpu_in_specs(name):
 
 matched_gpu = find_gpu_in_specs(detected_gpu_name)
 
-fps_frame = tk.LabelFrame(window, text="FPS Prediction", font=("Arial", 12))
-fps_frame.pack(padx=20, pady=8, fill="x")
+fps_frame = tk.LabelFrame(window, text="FPS Prediction", font=("Arial", 11))
+fps_frame.pack(padx=12, pady=5, fill="x")
 
-tk.Label(fps_frame, text="Graphics Card:", font=("Arial", 10)).pack(anchor="w", padx=10)
+tk.Label(fps_frame, text="Graphics Card:", font=("Arial", 9)).pack(anchor="w", padx=8)
 gpu_choice_var = tk.StringVar()
 gpu_names_sorted = sorted(GPU_SPECS.keys())
 if matched_gpu:
@@ -81,34 +81,45 @@ if matched_gpu:
     note = f"Detected: {matched_gpu}"
 else:
     gpu_choice_var.set(gpu_names_sorted[0])
-    note = f"'{detected_gpu_name}' not found in database - pick the closest match"
-gpu_note_label = tk.Label(fps_frame, text=note, font=("Arial", 9), fg="gray")
-gpu_note_label.pack(anchor="w", padx=10)
+    note = f"'{detected_gpu_name}' not found - pick the closest match"
+gpu_note_label = tk.Label(fps_frame, text=note, font=("Arial", 8), fg="gray")
+gpu_note_label.pack(anchor="w", padx=8)
 gpu_choice_menu = tk.OptionMenu(fps_frame, gpu_choice_var, *gpu_names_sorted)
-gpu_choice_menu.pack(anchor="w", padx=10, pady=3, fill="x")
+gpu_choice_menu.pack(anchor="w", padx=8, pady=2, fill="x")
 
-tk.Label(fps_frame, text="Game:", font=("Arial", 10)).pack(anchor="w", padx=10)
+tk.Label(fps_frame, text="Game:", font=("Arial", 9)).pack(anchor="w", padx=8)
 fps_game_var = tk.StringVar(value=fps_games[0])
 fps_game_menu = tk.OptionMenu(fps_frame, fps_game_var, *fps_games)
-fps_game_menu.pack(anchor="w", padx=10, pady=3, fill="x")
+fps_game_menu.pack(anchor="w", padx=8, pady=2, fill="x")
 
-tk.Label(fps_frame, text="Graphics Settings:", font=("Arial", 10)).pack(anchor="w", padx=10)
+settings_res_row = tk.Frame(fps_frame)
+settings_res_row.pack(fill="x", padx=8, pady=2)
+
+settings_col = tk.Frame(settings_res_row)
+settings_col.pack(side="left", expand=True, fill="x", padx=(0, 4))
+tk.Label(settings_col, text="Settings:", font=("Arial", 9)).pack(anchor="w")
 settings_var = tk.StringVar(value="high")
-settings_menu = tk.OptionMenu(fps_frame, settings_var, "low", "medium", "high", "ultra")
-settings_menu.pack(anchor="w", padx=10, pady=3, fill="x")
+settings_menu = tk.OptionMenu(settings_col, settings_var, "low", "medium", "high", "ultra")
+settings_menu.pack(fill="x")
 
-tk.Label(fps_frame, text="Resolution:", font=("Arial", 10)).pack(anchor="w", padx=10)
+res_col = tk.Frame(settings_res_row)
+res_col.pack(side="left", expand=True, fill="x", padx=(4, 0))
+tk.Label(res_col, text="Resolution:", font=("Arial", 9)).pack(anchor="w")
 res_var = tk.StringVar(value="1920x1080 (1080p)")
-res_menu = tk.OptionMenu(fps_frame, res_var, *RESOLUTIONS.keys())
-res_menu.pack(anchor="w", padx=10, pady=3, fill="x")
+res_menu = tk.OptionMenu(res_col, res_var, *RESOLUTIONS.keys())
+res_menu.pack(fill="x")
+
+predict_btn = tk.Button(fps_frame, text="Predict FPS", font=("Arial", 11, "bold"),
+                        bg="#2563eb", fg="white", command=lambda: predict_fps())
+predict_btn.pack(pady=6)
 
 fps_result_label = tk.Label(fps_frame, text="", font=("Arial", 16, "bold"))
-fps_result_label.pack(pady=8)
+fps_result_label.pack()
 
 fps_note_label = tk.Label(fps_frame,
     text="Native rendering estimate (no DLSS / Frame Gen). With DLSS it will be higher.",
     font=("Arial", 8), fg="gray")
-fps_note_label.pack()
+fps_note_label.pack(pady=(0, 4))
 
 def predict_fps():
     spec = GPU_SPECS[gpu_choice_var.get()]
@@ -132,40 +143,13 @@ def predict_fps():
         color = "red"
     fps_result_label.config(text=f"~ {fps:.0f} FPS", fg=color)
 
-predict_btn = tk.Button(fps_frame, text="Predict FPS", font=("Arial", 12, "bold"),
-                        bg="#2563eb", fg="white", command=predict_fps)
-predict_btn.pack(pady=8)
+temp_frame = tk.LabelFrame(window, text="Temperatures (live)", font=("Arial", 11))
+temp_frame.pack(padx=12, pady=5, fill="x")
 
-game_frame = tk.LabelFrame(window, text="Compatibility Check", font=("Arial", 12))
-game_frame.pack(padx=20, pady=8, fill="x")
-
-from game_data import games
-game_var = tk.StringVar(value=list(games.keys())[0])
-game_menu = tk.OptionMenu(game_frame, game_var, *games.keys())
-game_menu.pack(padx=10, pady=5)
-
-result_label = tk.Label(game_frame, text="", font=("Arial", 13, "bold"))
-result_label.pack(pady=5)
-
-def check_game():
-    game_name = game_var.get()
-    req = games[game_name]
-    if cpu_count >= req['min_cpu_cores'] and ram_gb >= req['min_ram_gb'] and gpus[0].memoryTotal >= req['min_vram_mb']:
-        result_label.config(text=f"OK  {game_name}: True", fg="green")
-    else:
-        result_label.config(text=f"X  {game_name}: False", fg="red")
-
-check_btn = tk.Button(game_frame, text="Check!", font=("Arial", 11, "bold"),
-                      bg="green", fg="white", command=check_game)
-check_btn.pack(pady=8)
-
-temp_frame = tk.LabelFrame(window, text="Temperatures (live)", font=("Arial", 12))
-temp_frame.pack(padx=20, pady=8, fill="x")
-
-cpu_temp_label = tk.Label(temp_frame, text="CPU: --C", font=("Arial", 11))
-cpu_temp_label.pack(anchor="w", padx=10, pady=3)
-gpu_temp_label = tk.Label(temp_frame, text="GPU: --C", font=("Arial", 11))
-gpu_temp_label.pack(anchor="w", padx=10, pady=3)
+cpu_temp_label = tk.Label(temp_frame, text="CPU: --C", font=("Arial", 10))
+cpu_temp_label.pack(anchor="w", padx=8, pady=1)
+gpu_temp_label = tk.Label(temp_frame, text="GPU: --C", font=("Arial", 10))
+gpu_temp_label.pack(anchor="w", padx=8, pady=1)
 
 def update_temps():
     g = GPUtil.getGPUs()
