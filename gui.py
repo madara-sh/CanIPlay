@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from tkinter import ttk
 import psutil
 import GPUtil
 import clr
@@ -40,6 +41,23 @@ RESOLUTIONS = {
     "3840x2160 (4K)": 3840 * 2160,
 }
 
+def make_searchable_combo(parent, values, initial):
+    var = tk.StringVar(value=initial)
+    combo = ttk.Combobox(parent, textvariable=var, values=values, state="normal")
+
+    def on_keyrelease(event):
+        if event.keysym in ("Up", "Down", "Return", "Escape", "Left", "Right"):
+            return
+        typed = var.get().lower()
+        if typed == "":
+            combo["values"] = values
+        else:
+            filtered = [v for v in values if typed in v.lower()]
+            combo["values"] = filtered if filtered else values
+
+    combo.bind("<KeyRelease>", on_keyrelease)
+    return combo, var
+
 window = tk.Tk()
 window.title("CanIPlay")
 window.geometry("560x620")
@@ -74,20 +92,19 @@ fps_frame = tk.LabelFrame(window, text="FPS Prediction", font=("Arial", 11))
 fps_frame.pack(padx=12, pady=5, fill="x")
 
 tk.Label(fps_frame, text="Graphics Card:", font=("Arial", 9)).pack(anchor="w", padx=8)
-gpu_choice_var = tk.StringVar()
 gpu_names_sorted = sorted(GPU_SPECS.keys())
+gpu_initial = matched_gpu if matched_gpu else gpu_names_sorted[0]
 if matched_gpu:
-    gpu_choice_var.set(matched_gpu)
     note = f"Detected: {matched_gpu}"
 else:
-    gpu_choice_var.set(gpu_names_sorted[0])
-    note = f"'{detected_gpu_name}' not found - pick the closest match"
+    note = f"'{detected_gpu_name}' not found - type to search"
 tk.Label(fps_frame, text=note, font=("Arial", 8), fg="gray").pack(anchor="w", padx=8)
-tk.OptionMenu(fps_frame, gpu_choice_var, *gpu_names_sorted).pack(anchor="w", padx=8, pady=2, fill="x")
+gpu_combo, gpu_choice_var = make_searchable_combo(fps_frame, gpu_names_sorted, gpu_initial)
+gpu_combo.pack(anchor="w", padx=8, pady=2, fill="x")
 
-tk.Label(fps_frame, text="Game:", font=("Arial", 9)).pack(anchor="w", padx=8)
-fps_game_var = tk.StringVar(value=fps_games[0])
-tk.OptionMenu(fps_frame, fps_game_var, *fps_games).pack(anchor="w", padx=8, pady=2, fill="x")
+tk.Label(fps_frame, text="Game (type to search):", font=("Arial", 9)).pack(anchor="w", padx=8)
+game_combo, fps_game_var = make_searchable_combo(fps_frame, fps_games, fps_games[0])
+game_combo.pack(anchor="w", padx=8, pady=2, fill="x")
 
 settings_res_row = tk.Frame(fps_frame)
 settings_res_row.pack(fill="x", padx=8, pady=2)
@@ -96,16 +113,26 @@ settings_col = tk.Frame(settings_res_row)
 settings_col.pack(side="left", expand=True, fill="x", padx=(0, 4))
 tk.Label(settings_col, text="Settings:", font=("Arial", 9)).pack(anchor="w")
 settings_var = tk.StringVar(value="high")
-tk.OptionMenu(settings_col, settings_var, "low", "medium", "high", "ultra").pack(fill="x")
+ttk.Combobox(settings_col, textvariable=settings_var,
+             values=["low", "medium", "high", "ultra"], state="readonly").pack(fill="x")
 
 res_col = tk.Frame(settings_res_row)
 res_col.pack(side="left", expand=True, fill="x", padx=(4, 0))
 tk.Label(res_col, text="Resolution:", font=("Arial", 9)).pack(anchor="w")
 res_var = tk.StringVar(value="1920x1080 (1080p)")
-tk.OptionMenu(res_col, res_var, *RESOLUTIONS.keys()).pack(fill="x")
+ttk.Combobox(res_col, textvariable=res_var,
+             values=list(RESOLUTIONS.keys()), state="readonly").pack(fill="x")
 
 def predict_fps():
-    spec = GPU_SPECS[gpu_choice_var.get()]
+    gpu_name = gpu_choice_var.get()
+    game_name = fps_game_var.get()
+    if gpu_name not in GPU_SPECS:
+        fps_result_label.config(text="Pick a valid card", fg="red")
+        return
+    if game_name not in fps_name_to_code:
+        fps_result_label.config(text="Pick a valid game", fg="red")
+        return
+    spec = GPU_SPECS[gpu_name]
     row = pd.DataFrame([{
         "perf_1080": spec["perf_1080"],
         "perf_1440": spec["perf_1440"],
@@ -114,7 +141,7 @@ def predict_fps():
         "year": spec["year"],
         "res_pixels": RESOLUTIONS[res_var.get()],
         "settings_num": settings_order[settings_var.get()],
-        "game_code": fps_name_to_code[fps_game_var.get()],
+        "game_code": fps_name_to_code[game_name],
     }])[fps_bundle["features"]]
     fps = fps_model.predict(row)[0]
 
