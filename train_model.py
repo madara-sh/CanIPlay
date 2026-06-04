@@ -24,13 +24,13 @@ def main():
     df = pd.read_csv(DATA)
     print(f"Загружено строк: {len(df)}")
 
-    # настройки -> число
+    # настройки 
     df["settings_num"] = df["settings"].map(SETTINGS_ORDER)
 
-    # игры -> числовые коды. Сохраняем словарь, чтобы прилка знала коды
+    # игры 
     df["game"] = df["game"].astype("category")
-    game_to_code = dict(enumerate(df["game"].cat.categories))   # code -> name
-    name_to_code = {v: k for k, v in game_to_code.items()}       # name -> code
+    game_to_code = dict(enumerate(df["game"].cat.categories))   
+    name_to_code = {v: k for k, v in game_to_code.items()}       
     df["game_code"] = df["game"].cat.codes
 
     df = df.dropna(subset=["perf_1080", "vram"])
@@ -47,12 +47,12 @@ def main():
     print(f"Средняя ошибка (MAE): {mean_absolute_error(y_te, pred):.1f} FPS")
     print(f"R2: {r2_score(y_te, pred):.3f}")
 
-    # сохраняем модель + справочники, нужные для предсказаний в прилке
+    # сохраняем модель 
     bundle = {
         "model": model,
         "features": FEATURES,
         "settings_order": SETTINGS_ORDER,
-        "name_to_code": name_to_code,   # имя игры -> код
+        "name_to_code": name_to_code,   # имя игры 
         "games": sorted(name_to_code.keys()),
     }
     joblib.dump(bundle, MODEL_OUT)
