@@ -1,0 +1,21 @@
+import customtkinter as ctk
+import psutil
+import GPUtil
+ctk.set_appearance_mode("dark")
+window = ctk.CTk()
+window.title('CanIPlay')
+window.geometry("560x620")
+title = ctk.CTkLabel(window, text="CanIPlay", font=ctk.CTkFont(size=24, weight="bold"))
+title.pack(pady=10)
+cpu_count = psutil.cpu_count()
+ram_gb = psutil.virtual_memory().total / (1024**3)
+gpus = GPUtil.getGPUs()
+hw_frame = ctk.CTkFrame(window)
+hw_frame.pack(pady=5, padx=12, fill="x")
+cpu_label = ctk.CTkLabel(hw_frame, text=f"CPU: {cpu_count} cores")
+cpu_label.pack(anchor="w", padx=8, pady=2)
+ram_label = ctk.CTkLabel(hw_frame, text=f"RAM: {ram_gb:.1f} GB")
+ram_label.pack(anchor="w", padx=8, pady=2)
+gpu_label = ctk.CTkLabel(hw_frame, text=f"GPU: {gpus[0].name}, VRAM: {gpus[0].memoryTotal} MB")
+gpu_label.pack(anchor="w", padx=8, pady=2)
+window.mainloop()
