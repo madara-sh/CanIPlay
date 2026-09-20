@@ -1,10 +1,4 @@
-"""
-train_model.py
-Обучает модель предсказания FPS на данных из fps_data.csv
-и сохраняет её в fps_model.pkl вместе со вспомогательными данными.
 
-Запуск:  python train_model.py
-"""
 
 import pandas as pd
 import joblib
@@ -24,10 +18,10 @@ def main():
     df = pd.read_csv(DATA)
     print(f"Загружено строк: {len(df)}")
 
-    # настройки 
+   
     df["settings_num"] = df["settings"].map(SETTINGS_ORDER)
 
-    # игры 
+   
     df["game"] = df["game"].astype("category")
     game_to_code = dict(enumerate(df["game"].cat.categories))   
     name_to_code = {v: k for k, v in game_to_code.items()}       
@@ -47,12 +41,12 @@ def main():
     print(f"Средняя ошибка (MAE): {mean_absolute_error(y_te, pred):.1f} FPS")
     print(f"R2: {r2_score(y_te, pred):.3f}")
 
-    # сохраняем модель 
+     
     bundle = {
         "model": model,
         "features": FEATURES,
         "settings_order": SETTINGS_ORDER,
-        "name_to_code": name_to_code,   # имя игры 
+        "name_to_code": name_to_code,  
         "games": sorted(name_to_code.keys()),
     }
     joblib.dump(bundle, MODEL_OUT)
